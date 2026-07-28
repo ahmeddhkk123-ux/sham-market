@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safa Şam Market — Ürün Kataloğu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F2ECDE;
+    --paper: #FBF8F0;
+    --olive: #3F4B2E;
+    --olive-dark: #2C3520;
+    --saffron: #D9A441;
+    --rust: #A8452F;
+    --ink: #241F18;
+    --ink-soft: #6B6355;
+    --line: #DCD3BC;
+    --green-wa: #3D7A4D;
+    --out-red: #B5502E;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Work Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 100px;
+  }
+  .display{ font-family:'Fraunces', serif; }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+
+  header{
+    padding: 28px 20px 20px;
+    max-width: 960px;
+    margin: 0 auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand-ar{
+    font-size: 15px;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  h1{
+    font-size: clamp(28px, 5vw, 40px);
+    font-weight: 600;
+    color: var(--olive-dark);
+    line-height: 1.05;
+  }
+  .tagline{
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin-top: 6px;
+    max-width: 420px;
+  }
+  .view-switch{
+    display:flex;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    height: fit-content;
+  }
+  .view-switch button{
+    border:none;
+    background:none;
+    padding: 8px 16px;
+    border-radius: 999px;
+    cursor:pointer;
+    color: var(--ink-soft);
+    font-family:'Work Sans', sans-serif;
+    font-size: 13px;
+    transition: all .2s ease;
+  }
+  .view-switch button.active{
+    background: var(--olive);
+    color: var(--paper);
+  }
+
+  .search-wrap{
+    max-width: 960px;
+    margin: 18px auto 0;
+    padding: 0 20px;
+  }
+  .search-box{
+    position: relative;
+    max-width: 420px;
+  }
+  .search-box input{
+    width: 100%;
+    padding: 11px 14px 11px 38px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    border-radius: 8px;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .search-box input::placeholder{ color: var(--ink-soft); }
+  .search-box input:focus{ outline: 2px solid var(--olive); outline-offset: 1px; }
+  .search-box .icon{
+    position:absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .no-results{
+    color: var(--ink-soft);
+    font-size: 14px;
+    padding: 40px 0;
+    text-align: center;
+    grid-column: 1 / -1;
+  }
+
+  .tabs{
+    max-width: 960px;
+    margin: 8px auto 0;
+    padding: 0 20px;
+    display:flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tab{
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink-soft);
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .tab.active{
+    background: var(--olive-dark);
+    border-color: var(--olive-dark);
+    color: var(--paper);
+  }
+
+  main{
+    max-width: 960px;
+    margin: 24px auto 0;
+    padding: 0 20px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 18px;
+  }
+
+  .tag{
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    position: relative;
+    padding: 18px 16px 14px;
+    display:flex;
+    flex-direction:column;
+    gap: 8px;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .tag:hover{
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(43,38,26,0.12);
+  }
+  .tag::before{
+    content:"";
+    position:absolute;
+    top: 12px; left: 12px;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    z-index: 2;
+  }
+  .tag.out{ opacity: 0.75; }
+
+  .photo-frame{
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg);
+    margin-top: 4px;
+  }
+  .photo-frame img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo-fallback{
+    width: 100%;
+    height: 100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 38px;
+    background: linear-gradient(135deg, rgba(63,75,46,0.08), rgba(217,164,65,0.1));
+  }
+  .out-ribbon{
+    position: absolute;
+    top: 14px; left: -32px;
+    width: 140px;
+    background: var(--out-red);
+    color: var(--paper);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-align: center;
+    padding: 4px 0;
+    transform: rotate(-40deg);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .tag-cat{
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--saffron);
+    font-weight: 600;
+  }
+  .tag-name{
+    font-family:'Fraunces', serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--olive-dark);
+    line-height: 1.2;
+  }
+  .tag-name-ar{
+    font-size: 13px;
+    color: var(--ink-soft);
+    direction: rtl;
+  }
+  .tag-price{
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 2px;
+  }
+  .barcode-strip{
+    margin-top: 6px;
+    height: 26px;
+    background-image: repeating-linear-gradient(90deg, var(--ink) 0px, var(--ink) 2px, transparent 2px, transparent 4px, var(--ink) 4px, var(--ink) 5px, transparent 5px, transparent 8px);
+    opacity: 0.8;
+  }
+  .barcode-num{
+    font-size: 10px;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+
+  .stock-badge{
+    position:absolute;
+    top: 12px; right: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+  .stock-badge.in{ background: rgba(63,75,46,0.12); color: var(--olive); }
+  .stock-badge.out{ background: rgba(181,80,46,0.12); color: var(--out-red); }
+
+  .add-btn{
+    margin-top: 8px;
+    border: 1px solid var(--olive);
+    background: transparent;
+    color: var(--olive-dark);
+    padding: 9px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family:'Work Sans', sans-serif;
+    transition: all .15s ease;
+  }
+  .add-btn:hover{ background: var(--olive); color: var(--paper); }
+  .add-btn:disabled{
+    border-color: var(--line);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
+  .add-btn:disabled:hover{ background: transparent; color: var(--ink-soft); }
+
+  .card-stepper{
+    margin-top: 8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border: 1px solid var(--olive);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .card-stepper button{
+    background: none;
+    border: none;
+    color: var(--olive-dark);
+    font-size: 16px;
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    font-family:'Work Sans', sans-serif;
+  }
+  .card-stepper button:hover{ background: rgba(63,75,46,0.1); }
+  .card-stepper span{
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .toast{
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--olive-dark);
+    color: var(--paper);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: all .25s ease;
+    z-index: 30;
+    white-space: nowrap;
+  }
+  .toast.show{
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Owner toggle */
+  .owner-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top: 8px;
+  }
+  .switch{
+    position: relative;
+    width: 42px;
+    height: 24px;
+    flex-shrink:0;
+  }
+  .switch input{ opacity:0; width:0; height:0; }
+  .slider{
+    position:absolute; cursor:pointer;
+    top:0; left:0; right:0; bottom:0;
+    background: var(--line);
+    border-radius: 999px;
+    transition: .2s;
+  }
+  .slider::before{
+    content:"";
+    position:absolute;
+    height: 18px; width: 18px;
+    left: 3px; bottom: 3px;
+    background: var(--paper);
+    border-radius:50%;
+    transition:.2s;
+  }
+  input:checked + .slider{ background: var(--olive); }
+  input:checked + .slider::before{ transform: translateX(18px); }
+  .switch-label{
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+
+  /* Cart bar */
+  .cart-bar{
+    position: fixed;
+    bottom: 0; left:0; right:0;
+    background: var(--olive-dark);
+    color: var(--paper);
+    padding: 14px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 16px;
+    transform: translateY(100%);
+    transition: transform .25s ease;
+    z-index: 10;
+  }
+  .cart-bar.show{ transform: translateY(0); }
+  .cart-bar .info{ font-size: 14px; }
+  .cart-bar .count{ color: var(--saffron); font-weight:600; }
+  .wa-btn{
+    background: var(--green-wa);
+    color: white;
+    border:none;
+    padding: 11px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .view-cart-btn{
+    background: none;
+    border: 1px solid rgba(251,248,240,0.35);
+    color: var(--paper);
+    padding: 11px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+    white-space: nowrap;
+  }
+
+  .overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(36,31,24,0.45);
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+  }
+  .overlay.show{ opacity: 1; pointer-events: auto; }
+
+  .drawer{
+    position: fixed;
+    top: 0; right: 0;
+    height: 100%;
+    width: min(380px, 90vw);
+    background: var(--paper);
+    z-index: 21;
+    transform: translateX(100%);
+    transition: transform .25s ease;
+    display:flex;
+    flex-direction: column;
+    box-shadow: -8px 0 24px rgba(0,0,0,0.15);
+  }
+  .drawer.show{ transform: translateX(0); }
+  .drawer-header{
+    padding: 20px;
+    border-bottom: 1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .drawer-header h2{
+    font-family:'Fraunces', serif;
+    font-size: 20px;
+    color: var(--olive-dark);
+    font-weight: 600;
+  }
+  .drawer-close{
+    background:none; border:none; cursor:pointer;
+    font-size: 20px; color: var(--ink-soft);
+    line-height: 1;
+    padding: 4px;
+  }
+  .drawer-items{
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 20px;
+  }
+  .drawer-empty{
+    color: var(--ink-soft);
+    font-size: 14px;
+    text-align: center;
+    padding: 60px 0;
+  }
+  .drawer-item{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .drawer-item .icon{ font-size: 24px; }
+  .drawer-item .info{ flex: 1; }
+  .drawer-item .info .name{
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .drawer-item .info .price{
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  .qty-control{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+  }
+  .qty-control button{
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .qty-control span{
+    font-size: 14px;
+    min-width: 16px;
+    text-align:center;
+  }
+  .remove-btn{
+    background: none;
+    border: none;
+    color: var(--out-red);
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 4px;
+  }
+  .drawer-footer{
+    padding: 18px 20px 22px;
+    border-top: 1px solid var(--line);
+  }
+  .drawer-total{
+    display:flex;
+    justify-content:space-between;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  .drawer-send{
+    width: 100%;
+    background: var(--green-wa);
+    color: white;
+    border:none;
+    padding: 13px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+  }
+  .drawer-send:disabled{
+    background: var(--line);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
+
+  .drawer-section{
+    margin-bottom: 16px;
+  }
+  .drawer-section label.section-label{
+    display:block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+  .address-input{
+    width: 100%;
+    min-height: 64px;
+    resize: vertical;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    border-radius: 6px;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .address-input:focus{ outline: 2px solid var(--olive); outline-offset: 1px; }
+  .address-input::placeholder{ color: var(--ink-soft); }
+
+  .payment-options{
+    display:flex;
+    gap: 8px;
+  }
+  .payment-option{
+    flex: 1;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 10px 8px;
+    text-align:center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 4px;
+    transition: all .15s ease;
+  }
+  .payment-option .pico{ font-size: 18px; }
+  .payment-option.selected{
+    border-color: var(--olive);
+    background: rgba(63,75,46,0.08);
+    color: var(--olive-dark);
+  }
+
+  .owner-note{
+    max-width: 960px;
+    margin: 0 auto 8px;
+    padding: 0 20px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    display:flex;
+    align-items:center;
+    gap: 8px;
+  }
+  .owner-note .dot{
+    width:7px; height:7px; border-radius:50%; background: var(--saffron);
+  }
+
+  footer{
+    max-width: 960px;
+    margin: 40px auto 0;
+    padding: 20px 20px 0;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand-ar">سوق صفا الشام</div>
+    <h1 class="display">Safa Şam Market</h1>
+    <p class="tagline">Zafer Mahallesi, Esenyurt — Suriye, Körfez ve Türk ürünleri bir arada. Ürünü gör, stoğu kontrol et, WhatsApp'tan sipariş ver.</p>
+  </div>
+  <div class="view-switch" id="viewSwitch">
+    <button class="active" data-view="customer">Müşteri Görünümü</button>
+    <button data-view="owner">Dükkan Sahibi</button>
+  </div>
+</header>
+
+<div class="owner-note" id="ownerNote" style="display:none;">
+  <span class="dot"></span>
+  <span>Bu ekran sadece size özel — bir ürün tükendiğinde anahtarı kapatın, müşteri ekranında anında "Stokta Yok" olarak görünür.</span>
+</div>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Ürün ara... (örn. peynir, noodle, kahve)">
+  </div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="cart-bar" id="cartBar">
+  <div class="info">Sepetinizde <span class="count" id="cartCount">0</span> ürün var</div>
+  <button class="view-cart-btn" id="viewCartBtn">Sepeti Gör</button>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h2 class="display">Sepetiniz</h2>
+    <button class="drawer-close" id="drawerClose">✕</button>
+  </div>
+  <div class="drawer-items" id="drawerItems"></div>
+  <div class="drawer-footer">
+    <div class="drawer-section">
+      <label class="section-label">Teslimat Adresi</label>
+      <textarea class="address-input" id="addressInput" placeholder="Mahalle, sokak, bina no, daire no..."></textarea>
+    </div>
+    <div class="drawer-section">
+      <label class="section-label">Ödeme Yöntemi</label>
+      <div class="payment-options">
+        <div class="payment-option" data-payment="Kart">
+          <span class="pico">💳</span>
+          <span>Kart</span>
+        </div>
+        <div class="payment-option" data-payment="Nakit">
+          <span class="pico">💵</span>
+          <span>Nakit</span>
+        </div>
+      </div>
+    </div>
+    <div class="drawer-total">
+      <span>Toplam</span>
+      <span class="mono" id="drawerTotal">₺0</span>
+    </div>
+    <button class="drawer-send" id="waBtn" disabled>Sahibine WhatsApp'tan Gönder</button>
+  </div>
+</div>
+
+<footer>
+  Bu bir örnek/prototip sayfadır — Safa Şam Market için hazırlanmıştır.
+</footer>
+
+<script>
+const products = [
+  { id:1, name:"Puck Krem Peynir", nameAr:"جبنة بوك", cat:"Süt & Peynir", icon:"🧀", photo:"photos/puck-krem-peynir.jpg", price:145, barcode:"6221011012345", stock:true },
+  { id:2, name:"Halloumi Peyniri", nameAr:"جبنة حلوم", cat:"Süt & Peynir", icon:"🧀", photo:"photos/halloumi-peyniri.jpg", price:210, barcode:"6221011098765", stock:true },
+  { id:3, name:"Indomie Tavuklu Noodle", nameAr:"إندومي بالدجاج", cat:"Hazır Noodle", icon:"🍜", photo:"photos/indomie-tavuklu.jpg", price:25, barcode:"8992388123456", stock:true },
+  { id:4, name:"Indomie Etli Noodle", nameAr:"إندومي باللحم", cat:"Hazır Noodle", icon:"🍜", photo:"photos/indomie-etli.jpg", price:25, barcode:"8992388654321", stock:false },
+  { id:5, name:"Red Bull Enerji İçeceği", nameAr:"ريد بُل", cat:"İçecekler", icon:"🥤", photo:"photos/red-bull.jpg", price:75, barcode:"9002490100070", stock:true },
+  { id:6, name:"Vimto Gazlı İçecek", nameAr:"فيمتو", cat:"İçecekler", icon:"🧃", photo:"photos/vimto.jpg", price:60, barcode:"5000208126547", stock:true },
+  { id:7, name:"Medjool Hurma 500g", nameAr:"تمر مجهول", cat:"Kuruyemiş & Bakliyat", icon:"🌰", photo:"photos/medjool-hurma.jpg", price:180, barcode:"6291234567890", stock:true },
+  { id:8, name:"Tahin Ezmesi", nameAr:"طحينة", cat:"Kuruyemiş & Bakliyat", icon:"🫙", photo:"photos/tahin-ezmesi.jpg", price:95, barcode:"6224001234567", stock:true },
+  { id:9, name:"Zaatar Baharat Karışımı", nameAr:"زعتر", cat:"Baharat", icon:"🌿", photo:"photos/zaatar.jpg", price:65, barcode:"6224009876543", stock:true },
+  { id:10, name:"Kakuleli Arap Kahvesi", nameAr:"قهوة عربية بالهيل", cat:"Baharat", icon:"☕", photo:"photos/arap-kahvesi.jpg", price:120, barcode:"6224005556677", stock:true },
+];
+
+let currentView = "customer";
+let currentCat = "Tümü";
+let searchQuery = "";
+let cart = {};
+let selectedPayment = null;
+const OWNER_WHATSAPP = "905550839126"; // Sipariş buraya WhatsApp'tan iletilir
+
+const categories = ["Tümü", ...Array.from(new Set(products.map(p=>p.cat)))];
+
+function addRibbon(frame){
+  const ribbon = document.createElement("div");
+  ribbon.className = "out-ribbon";
+  ribbon.textContent = "STOKTA YOK";
+  frame.appendChild(ribbon);
+}
+
+let toastTimer = null;
+function showToast(text){
+  const toast = document.getElementById("toast");
+  toast.textContent = text;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+}
+
+function renderTabs(){
+  const tabsEl = document.getElementById("tabs");
+  tabsEl.innerHTML = "";
+  categories.forEach(cat=>{
+    const btn = document.createElement("button");
+    btn.className = "tab" + (cat===currentCat ? " active" : "");
+    btn.textContent = cat;
+    btn.onclick = () => { currentCat = cat; renderTabs(); renderGrid(); };
+    tabsEl.appendChild(btn);
+  });
+}
+
+function renderGrid(){
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  const q = searchQuery.trim().toLocaleLowerCase('tr');
+  const list = products.filter(p => {
+    const matchesCat = currentCat === "Tümü" || p.cat === currentCat;
+    const matchesSearch = !q ||
+      p.name.toLocaleLowerCase('tr').includes(q) ||
+      p.nameAr.includes(searchQuery.trim()) ||
+      p.cat.toLocaleLowerCase('tr').includes(q) ||
+      p.barcode.includes(q);
+    return matchesCat && matchesSearch;
+  });
+
+  if(list.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "no-results";
+    empty.textContent = "\"" + searchQuery + "\" için ürün bulunamadı.";
+    grid.appendChild(empty);
+    return;
+  }
+
+  list.forEach(p=>{
+    const card = document.createElement("div");
+    card.className = "tag" + (!p.stock ? " out" : "");
+
+    const badge = document.createElement("div");
+    badge.className = "stock-badge " + (p.stock ? "in" : "out");
+    badge.textContent = p.stock ? "STOKTA" : "STOKTA YOK";
+    card.appendChild(badge);
+
+    const frame = document.createElement("div");
+    frame.className = "photo-frame";
+    const img = document.createElement("img");
+    img.src = p.photo;
+    img.alt = p.name;
+    img.onerror = () => {
+      frame.innerHTML = "";
+      const fallback = document.createElement("div");
+      fallback.className = "photo-fallback";
+      fallback.textContent = p.icon;
+      frame.appendChild(fallback);
+      if(!p.stock) addRibbon(frame);
+    };
+    frame.appendChild(img);
+    if(!p.stock) addRibbon(frame);
+    card.appendChild(frame);
+
+    const catEl = document.createElement("div");
+    catEl.className = "tag-cat";
+    catEl.textContent = p.cat;
+    card.appendChild(catEl);
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "tag-name";
+    nameEl.textContent = p.name;
+    card.appendChild(nameEl);
+
+    const nameArEl = document.createElement("div");
+    nameArEl.className = "tag-name-ar";
+    nameArEl.textContent = p.nameAr;
+    card.appendChild(nameArEl);
+
+    const priceEl = document.createElement("div");
+    priceEl.className = "tag-price mono";
+    priceEl.textContent = "₺" + p.price;
+    card.appendChild(priceEl);
+
+    const strip = document.createElement("div");
+    strip.className = "barcode-strip";
+    card.appendChild(strip);
+
+    const bnum = document.createElement("div");
+    bnum.className = "barcode-num mono";
+    bnum.textContent = p.barcode;
+    card.appendChild(bnum);
+
+    if(currentView === "customer"){
+      if(!p.stock){
+        const btn = document.createElement("button");
+        btn.className = "add-btn";
+        btn.textContent = "Şu An Stokta Yok";
+        btn.disabled = true;
+        card.appendChild(btn);
+      } else if(cart[p.id]){
+        const stepper = document.createElement("div");
+        stepper.className = "card-stepper";
+        stepper.innerHTML = `
+          <button data-dec="${p.id}">−</button>
+          <span>${cart[p.id]}</span>
+          <button data-inc="${p.id}">+</button>
+        `;
+        card.appendChild(stepper);
+      } else {
+        const btn = document.createElement("button");
+        btn.className = "add-btn";
+        btn.textContent = "Sepete Ekle";
+        btn.onclick = () => {
+          cart[p.id] = (cart[p.id]||0) + 1;
+          renderGrid(); updateCartBar(); showToast(p.name + " sepete eklendi");
+        };
+        card.appendChild(btn);
+      }
+    } else {
+      const row = document.createElement("div");
+      row.className = "owner-row";
+
+      const label = document.createElement("span");
+      label.className = "switch-label";
+      label.textContent = "Stokta var";
+
+      const label2 = document.createElement("label");
+      label2.className = "switch";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = p.stock;
+      input.onchange = () => { p.stock = input.checked; renderGrid(); };
+      const slider = document.createElement("span");
+      slider.className = "slider";
+      label2.appendChild(input);
+      label2.appendChild(slider);
+
+      row.appendChild(label);
+      row.appendChild(label2);
+      card.appendChild(row);
+    }
+
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll("[data-inc]").forEach(btn=>{
+    btn.onclick = () => { cart[btn.dataset.inc] = (cart[btn.dataset.inc]||0) + 1; renderGrid(); updateCartBar(); };
+  });
+  grid.querySelectorAll("[data-dec]").forEach(btn=>{
+    btn.onclick = () => {
+      const id = btn.dataset.dec;
+      cart[id] = Math.max(0, (cart[id]||0) - 1);
+      if(cart[id] === 0) delete cart[id];
+      renderGrid(); updateCartBar();
+    };
+  });
+}
+
+function cartTotal(){
+  return Object.entries(cart).reduce((sum,[id,qty]) => {
+    const p = products.find(x => x.id == id);
+    return sum + p.price*qty;
+  }, 0);
+}
+
+function updateCartBar(){
+  const totalCount = Object.values(cart).reduce((a,b)=>a+b,0);
+  document.getElementById("cartCount").textContent = totalCount;
+  document.getElementById("cartBar").classList.toggle("show", totalCount > 0 && currentView === "customer");
+}
+
+function renderDrawer(){
+  const itemsEl = document.getElementById("drawerItems");
+  itemsEl.innerHTML = "";
+  const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
+
+  if(entries.length === 0){
+    itemsEl.innerHTML = '<div class="drawer-empty">Sepetiniz boş. Ürün eklemek için katalogdan seçim yapın.</div>';
+  } else {
+    entries.forEach(([id, qty])=>{
+      const p = products.find(x => x.id == id);
+      const row = document.createElement("div");
+      row.className = "drawer-item";
+      row.innerHTML = `
+        <div class="icon">${p.icon}</div>
+        <div class="info">
+          <div class="name">${p.name}</div>
+          <div class="price mono">₺${p.price} / adet</div>
+          <button class="remove-btn" data-remove="${p.id}">Kaldır</button>
+        </div>
+        <div class="qty-control">
+          <button data-dec="${p.id}">−</button>
+          <span>${qty}</span>
+          <button data-inc="${p.id}">+</button>
+        </div>
+      `;
+      itemsEl.appendChild(row);
+    });
+  }
+
+  document.getElementById("drawerTotal").textContent = "₺" + cartTotal();
+  updateSendButtonState();
+
+  itemsEl.querySelectorAll("[data-inc]").forEach(btn=>{
+    btn.onclick = () => { cart[btn.dataset.inc]++; renderDrawer(); renderGrid(); updateCartBar(); };
+  });
+  itemsEl.querySelectorAll("[data-dec]").forEach(btn=>{
+    btn.onclick = () => {
+      const id = btn.dataset.dec;
+      cart[id] = Math.max(0, (cart[id]||0) - 1);
+      if(cart[id] === 0) delete cart[id];
+      renderDrawer(); renderGrid(); updateCartBar();
+    };
+  });
+  itemsEl.querySelectorAll("[data-remove]").forEach(btn=>{
+    btn.onclick = () => { delete cart[btn.dataset.remove]; renderDrawer(); renderGrid(); updateCartBar(); };
+  });
+}
+
+function openDrawer(){
+  renderDrawer();
+  document.getElementById("drawer").classList.add("show");
+  document.getElementById("overlay").classList.add("show");
+}
+function closeDrawer(){
+  document.getElementById("drawer").classList.remove("show");
+  document.getElementById("overlay").classList.remove("show");
+}
+
+document.getElementById("viewCartBtn").onclick = openDrawer;
+document.getElementById("drawerClose").onclick = closeDrawer;
+document.getElementById("overlay").onclick = closeDrawer;
+
+document.querySelectorAll(".payment-option").forEach(el=>{
+  el.onclick = () => {
+    selectedPayment = el.dataset.payment;
+    document.querySelectorAll(".payment-option").forEach(o=>o.classList.remove("selected"));
+    el.classList.add("selected");
+    updateSendButtonState();
+  };
+});
+
+document.getElementById("addressInput").addEventListener("input", updateSendButtonState);
+
+function updateSendButtonState(){
+  const address = document.getElementById("addressInput").value.trim();
+  const hasItems = Object.values(cart).some(qty => qty > 0);
+  document.getElementById("waBtn").disabled = !(hasItems && address && selectedPayment);
+}
+
+document.getElementById("waBtn").onclick = () => {
+  const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
+  const address = document.getElementById("addressInput").value.trim();
+  if(entries.length === 0 || !address || !selectedPayment) return;
+
+  const lines = entries.map(([id, qty]) => {
+    const p = products.find(x => x.id == id);
+    return "• " + p.name + " x" + qty + " — ₺" + (p.price*qty);
+  });
+  const message = "Merhaba, Safa Şam Market'ten sipariş vermek istiyorum:%0A%0A" +
+    encodeURIComponent(lines.join("\n")) +
+    "%0A%0A" + encodeURIComponent("Toplam: ₺" + cartTotal()) +
+    "%0A" + encodeURIComponent("Ödeme: " + selectedPayment) +
+    "%0A" + encodeURIComponent("Teslimat Adresi: " + address);
+  window.open("https://wa.me/" + OWNER_WHATSAPP + "?text=" + message, "_blank");
+};
+
+document.getElementById("searchInput").addEventListener("input", (e) => {
+  searchQuery = e.target.value;
+  renderGrid();
+});
+
+document.querySelectorAll("#viewSwitch button").forEach(btn=>{
+  btn.onclick = () => {
+    document.querySelectorAll("#viewSwitch button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    currentView = btn.dataset.view;
+    document.getElementById("ownerNote").style.display = currentView === "owner" ? "flex" : "none";
+    renderGrid();
+    updateCartBar();
+  };
+});
+
+renderTabs();
+renderGrid();
+</script>
+
+<div class="toast" id="toast">Sepete eklendi ✓</div>
+
+</body>
+</html>
