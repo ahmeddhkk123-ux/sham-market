@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safa Şam Market — Ürün Kataloğu</title>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand-ar">سوق صفا الشام</div>
+    <h1 class="display">Safa Şam Market</h1>
+    <p class="tagline">Zafer Mahallesi, Esenyurt — Suriye, Körfez ve Türk ürünleri bir arada. Ürünü gör, stoğu kontrol et, WhatsApp'tan sipariş ver.</p>
+  </div>
+</header>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Ürün ara... (örn. peynir, noodle, kahve)">
+  </div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<main><div class="grid" id="grid"><div class="loading-state">Ürünler yükleniyor...</div></div></main>
+
+<div class="cart-bar" id="cartBar">
+  <div class="info">Sepetinizde <span class="count" id="cartCount">0</span> ürün var</div>
+  <button class="view-cart-btn" id="viewCartBtn">Sepeti Gör</button>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="drawer" id="drawer">
+  <div class="drawer-header"><h2 class="display">Sepetiniz</h2><button class="drawer-close" id="drawerClose">✕</button></div>
+  <div class="drawer-items" id="drawerItems"></div>
+  <div class="drawer-footer">
+    <div class="drawer-section">
+      <label class="section-label">Teslimat Adresi</label>
+      <textarea class="address-input" id="addressInput" placeholder="Mahalle, sokak, bina no, daire no..."></textarea>
+    </div>
+    <div class="drawer-section">
+      <label class="section-label">Ödeme Yöntemi</label>
+      <div class="payment-options">
+        <div class="payment-option" data-payment="Kart"><span class="pico">💳</span><span>Kart</span></div>
+        <div class="payment-option" data-payment="Nakit"><span class="pico">💵</span><span>Nakit</span></div>
+      </div>
+    </div>
+    <div class="drawer-total"><span>Toplam</span><span class="mono" id="drawerTotal">₺0</span></div>
+    <button class="drawer-send" id="waBtn" disabled>Sahibine WhatsApp'tan Gönder</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">Sepete eklendi ✓</div>
+
+<footer>Bu bir örnek/prototip sayfadır — Safa Şam Market için hazırlanmıştır.</footer>
+
+<script>
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const OWNER_WHATSAPP = "905550839126";
+
+let products = [];
+let currentCat = "Tümü";
+let searchQuery = "";
+let cart = {};
+let selectedPayment = null;
+
+db.collection("products").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+  products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  renderTabs();
+  renderGrid();
+}, (err) => {
+  document.getElementById("grid").innerHTML =
+    '<div class="empty-state">Ürünler yüklenemedi.<br><span class="mono" style="font-size:11px;">' + err.message + '</span></div>';
+});
+
+function renderTabs(){
+  const categories = ["Tümü", ...Array.from(new Set(products.map(p=>p.cat)))];
+  const tabsEl = document.getElementById("tabs");
+  tabsEl.innerHTML = "";
+  categories.forEach(cat=>{
+    const btn = document.createElement("button");
+    btn.className = "tab" + (cat===currentCat ? " active" : "");
+    btn.textContent = cat;
+    btn.onclick = () => { currentCat = cat; renderTabs(); renderGrid(); };
+    tabsEl.appendChild(btn);
+  });
+}
+
+function addRibbon(frame){
+  const ribbon = document.createElement("div");
+  ribbon.className = "out-ribbon";
+  ribbon.textContent = "STOKTA YOK";
+  frame.appendChild(ribbon);
+}
+
+let toastTimer = null;
+function showToast(text){
+  const toast = document.getElementById("toast");
+  toast.textContent = text;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+}
+
+function renderGrid(){
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  if(products.length === 0){
+    grid.innerHTML = '<div class="empty-state">Henüz ürün eklenmedi.</div>';
+    return;
+  }
+
+  const q = searchQuery.trim().toLocaleLowerCase('tr');
+  const list = products.filter(p => {
+    const matchesCat = currentCat === "Tümü" || p.cat === currentCat;
+    const matchesSearch = !q ||
+      (p.name||"").toLocaleLowerCase('tr').includes(q) ||
+      (p.nameAr||"").includes(searchQuery.trim()) ||
+      (p.cat||"").toLocaleLowerCase('tr').includes(q) ||
+      (p.barcode||"").includes(q);
+    return matchesCat && matchesSearch;
+  });
+
+  if(list.length === 0){
+    grid.innerHTML = '<div class="no-results">"' + searchQuery + '" için ürün bulunamadı.</div>';
+    return;
+  }
+
+  list.forEach(p=>{
+    const card = document.createElement("div");
+    card.className = "tag" + (!p.stock ? " out" : "");
+
+    const badge = document.createElement("div");
+    badge.className = "stock-badge " + (p.stock ? "in" : "out");
+    badge.textContent = p.stock ? "STOKTA" : "STOKTA YOK";
+    card.appendChild(badge);
+
+    const frame = document.createElement("div");
+    frame.className = "photo-frame";
+    if(p.photoURL){
+      const img = document.createElement("img");
+      img.src = p.photoURL;
+      img.alt = p.name;
+      img.onerror = () => { frame.innerHTML = ""; const fb=document.createElement("div"); fb.className="photo-fallback"; fb.textContent="🛒"; frame.appendChild(fb); if(!p.stock) addRibbon(frame); };
+      frame.appendChild(img);
+    } else {
+      const fb = document.createElement("div");
+      fb.className = "photo-fallback";
+      fb.textContent = "🛒";
+      frame.appendChild(fb);
+    }
+    if(!p.stock) addRibbon(frame);
+    card.appendChild(frame);
+
+    const catEl = document.createElement("div");
+    catEl.className = "tag-cat";
+    catEl.textContent = p.cat;
+    card.appendChild(catEl);
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "tag-name";
+    nameEl.textContent = p.name;
+    card.appendChild(nameEl);
+
+    if(p.nameAr){
+      const nameArEl = document.createElement("div");
+      nameArEl.className = "tag-name-ar";
+      nameArEl.textContent = p.nameAr;
+      card.appendChild(nameArEl);
+    }
+
+    const priceEl = document.createElement("div");
+    priceEl.className = "tag-price mono";
+    priceEl.textContent = "₺" + p.price;
+    card.appendChild(priceEl);
+
+    if(p.barcode){
+      const strip = document.createElement("div");
+      strip.className = "barcode-strip";
+      card.appendChild(strip);
+      const bnum = document.createElement("div");
+      bnum.className = "barcode-num mono";
+      bnum.textContent = p.barcode;
+      card.appendChild(bnum);
+    }
+
+    if(!p.stock){
+      const btn = document.createElement("button");
+      btn.className = "add-btn"; btn.textContent = "Şu An Stokta Yok"; btn.disabled = true;
+      card.appendChild(btn);
+    } else if(cart[p.id]){
+      const stepper = document.createElement("div");
+      stepper.className = "card-stepper";
+      stepper.innerHTML = `<button data-dec="${p.id}">−</button><span>${cart[p.id]}</span><button data-inc="${p.id}">+</button>`;
+      card.appendChild(stepper);
+    } else {
+      const btn = document.createElement("button");
+      btn.className = "add-btn"; btn.textContent = "Sepete Ekle";
+      btn.onclick = () => { cart[p.id] = (cart[p.id]||0) + 1; renderGrid(); updateCartBar(); showToast(p.name + " sepete eklendi"); };
+      card.appendChild(btn);
+    }
+
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll("[data-inc]").forEach(btn=>{
+    btn.onclick = () => { cart[btn.dataset.inc] = (cart[btn.dataset.inc]||0) + 1; renderGrid(); updateCartBar(); };
+  });
+  grid.querySelectorAll("[data-dec]").forEach(btn=>{
+    btn.onclick = () => {
+      const id = btn.dataset.dec;
+      cart[id] = Math.max(0, (cart[id]||0) - 1);
+      if(cart[id] === 0) delete cart[id];
+      renderGrid(); updateCartBar();
+    };
+  });
+}
+
+function cartTotal(){
+  return Object.entries(cart).reduce((sum,[id,qty]) => {
+    const p = products.find(x => x.id == id);
+    return sum + (p ? p.price*qty : 0);
+  }, 0);
+}
+function updateCartBar(){
+  const totalCount = Object.values(cart).reduce((a,b)=>a+b,0);
+  document.getElementById("cartCount").textContent = totalCount;
+  document.getElementById("cartBar").classList.toggle("show", totalCount > 0);
+}
+function renderDrawer(){
+  const itemsEl = document.getElementById("drawerItems");
+  itemsEl.innerHTML = "";
+  const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
+  if(entries.length === 0){
+    itemsEl.innerHTML = '<div class="drawer-empty">Sepetiniz boş. Ürün eklemek için katalogdan seçim yapın.</div>';
+  } else {
+    entries.forEach(([id, qty])=>{
+      const p = products.find(x => x.id == id);
+      if(!p) return;
+      const row = document.createElement("div");
+      row.className = "drawer-item";
+      row.innerHTML = `
+        <div class="icon">${p.photoURL ? '<img src="'+p.photoURL+'">' : '🛒'}</div>
+        <div class="info">
+          <div class="name">${p.name}</div>
+          <div class="price mono">₺${p.price} / adet</div>
+          <button class="remove-btn" data-remove="${p.id}">Kaldır</button>
+        </div>
+        <div class="qty-control"><button data-dec="${p.id}">−</button><span>${qty}</span><button data-inc="${p.id}">+</button></div>
+      `;
+      itemsEl.appendChild(row);
+    });
+  }
+  document.getElementById("drawerTotal").textContent = "₺" + cartTotal();
+  updateSendButtonState();
+
+  itemsEl.querySelectorAll("[data-inc]").forEach(btn=>{
+    btn.onclick = () => { cart[btn.dataset.inc]++; renderDrawer(); renderGrid(); updateCartBar(); };
+  });
+  itemsEl.querySelectorAll("[data-dec]").forEach(btn=>{
+    btn.onclick = () => {
+      const id = btn.dataset.dec;
+      cart[id] = Math.max(0, (cart[id]||0) - 1);
+      if(cart[id] === 0) delete cart[id];
+      renderDrawer(); renderGrid(); updateCartBar();
+    };
+  });
+  itemsEl.querySelectorAll("[data-remove]").forEach(btn=>{
+    btn.onclick = () => { delete cart[btn.dataset.remove]; renderDrawer(); renderGrid(); updateCartBar(); };
+  });
+}
+function openDrawer(){ renderDrawer(); document.getElementById("drawer").classList.add("show"); document.getElementById("overlay").classList.add("show"); }
+function closeDrawer(){ document.getElementById("drawer").classList.remove("show"); document.getElementById("overlay").classList.remove("show"); }
+document.getElementById("viewCartBtn").onclick = openDrawer;
+document.getElementById("drawerClose").onclick = closeDrawer;
+document.getElementById("overlay").onclick = closeDrawer;
+
+document.querySelectorAll(".payment-option").forEach(el=>{
+  el.onclick = () => {
+    selectedPayment = el.dataset.payment;
+    document.querySelectorAll(".payment-option").forEach(o=>o.classList.remove("selected"));
+    el.classList.add("selected");
+    updateSendButtonState();
+  };
+});
+document.getElementById("addressInput").addEventListener("input", updateSendButtonState);
+function updateSendButtonState(){
+  const address = document.getElementById("addressInput").value.trim();
+  const hasItems = Object.values(cart).some(qty => qty > 0);
+  document.getElementById("waBtn").disabled = !(hasItems && address && selectedPayment);
+}
+document.getElementById("waBtn").onclick = () => {
+  const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
+  const address = document.getElementById("addressInput").value.trim();
+  if(entries.length === 0 || !address || !selectedPayment) return;
+  const lines = entries.map(([id, qty]) => {
+    const p = products.find(x => x.id == id);
+    return "• " + p.name + " x" + qty + " — ₺" + (p.price*qty);
+  });
+  const message = "Merhaba, Safa Şam Market'ten sipariş vermek istiyorum:%0A%0A" +
+    encodeURIComponent(lines.join("\n")) +
+    "%0A%0A" + encodeURIComponent("Toplam: ₺" + cartTotal()) +
+    "%0A" + encodeURIComponent("Ödeme: " + selectedPayment) +
+    "%0A" + encodeURIComponent("Teslimat Adresi: " + address);
+  window.open("https://wa.me/" + OWNER_WHATSAPP + "?text=" + message, "_blank");
+};
+
+document.getElementById("searchInput").addEventListener("input", (e) => { searchQuery = e.target.value; renderGrid(); });
+</script>
+
+</body>
+</html>

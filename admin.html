@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safa Şam Market — Yönetim Paneli</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand-ar">سوق صفا الشام</div>
+    <h1 class="display">Yönetim Paneli</h1>
+    <p class="tagline">Ürünlerinizi buradan ekleyin, düzenleyin ve stok durumunu güncelleyin.</p>
+  </div>
+</header>
+
+<div class="owner-toolbar" id="ownerToolbar">
+  <div class="owner-note"><span class="dot"></span><span id="ownerStatusText">Giriş yapılmadı.</span></div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <button class="ghost-btn" id="seedBtn" style="display:none;">Örnek Ürünleri Yükle (10 ürün)</button>
+    <button class="primary-btn" id="addProductBtn" style="display:none;">+ Yeni Ürün Ekle</button>
+    <button class="ghost-btn" id="logoutBtn" style="display:none;">Çıkış Yap</button>
+  </div>
+</div>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Ürün ara...">
+  </div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<main><div class="grid" id="grid"><div class="empty-state">Devam etmek için giriş yapın.</div></div></main>
+
+<div class="overlay" id="overlay"></div>
+
+<!-- Owner login modal -->
+<div class="modal" id="loginModal">
+  <div class="modal-header"><h2 class="display">Dükkan Sahibi Girişi</h2></div>
+  <div class="modal-body">
+    <div class="field"><label>E-posta</label><input type="email" id="loginEmail" placeholder="ornek@mail.com"></div>
+    <div class="field"><label>Şifre</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+    <div class="field-error" id="loginError"></div>
+  </div>
+  <div class="modal-footer">
+    <button class="save-btn" id="loginSubmitBtn" style="flex:1;">Giriş Yap</button>
+  </div>
+</div>
+
+<!-- Add / edit product modal -->
+<div class="modal" id="productModal">
+  <div class="modal-header"><h2 class="display" id="productModalTitle">Yeni Ürün Ekle</h2><button class="drawer-close" id="productModalClose">✕</button></div>
+  <div class="modal-body">
+    <div class="field"><label>Ürün Adı (Türkçe)</label><input type="text" id="pName" placeholder="örn. Puck Krem Peynir"></div>
+    <div class="field"><label>Ürün Adı (Arapça) — isteğe bağlı</label><input type="text" id="pNameAr" placeholder="جبنة بوك"></div>
+    <div class="field"><label>Kategori</label><input type="text" id="pCat" placeholder="örn. Süt & Peynir" list="catList"><datalist id="catList"></datalist></div>
+    <div class="field"><label>Fiyat (₺)</label><input type="number" id="pPrice" placeholder="0" min="0"></div>
+    <div class="field"><label>Barkod — isteğe bağlı</label><input type="text" id="pBarcode" placeholder="isteğe bağlı"></div>
+    <div class="field">
+      <label>Stok Durumu</label>
+      <div class="field-row">
+        <label class="switch"><input type="checkbox" id="pStock" checked><span class="slider"></span></label>
+        <span class="switch-label" id="pStockLabel">Stokta var</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Ürün Fotoğrafı</label>
+      <div class="photo-picker" id="photoPicker">
+        <div id="photoPickerText">📷 Fotoğraf çekmek veya seçmek için dokunun</div>
+        <img id="photoPreview" style="display:none;">
+      </div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
+    </div>
+    <div class="field-error" id="productError"></div>
+  </div>
+  <div class="modal-footer">
+    <button class="cancel-btn" id="productCancelBtn">Vazgeç</button>
+    <button class="save-btn" id="productSaveBtn">Kaydet</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">Kaydedildi ✓</div>
+
+<footer>Bu sayfa yalnızca dükkan sahibi içindir — müşterilerle paylaşılmamalıdır.</footer>
+
+<script>
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+const auth = firebase.auth();
+
+let products = [];
+let currentCat = "Tümü";
+let searchQuery = "";
+let isOwnerLoggedIn = false;
+let editingProductId = null;
+let pickedPhotoFile = null;
+
+db.collection("products").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+  products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  renderTabs();
+  renderGrid();
+  updateSeedButtonVisibility();
+}, (err) => {
+  document.getElementById("grid").innerHTML =
+    '<div class="empty-state">Ürünler yüklenemedi.<br><span class="mono" style="font-size:11px;">' + err.message + '</span></div>';
+});
+
+auth.onAuthStateChanged((user) => {
+  isOwnerLoggedIn = !!user;
+  document.getElementById("addProductBtn").style.display = isOwnerLoggedIn ? "inline-block" : "none";
+  document.getElementById("logoutBtn").style.display = isOwnerLoggedIn ? "inline-block" : "none";
+  document.getElementById("ownerStatusText").textContent = isOwnerLoggedIn
+    ? "Giriş yapıldı — ürün ekleyip düzenleyebilirsiniz."
+    : "Devam etmek için giriş yapın.";
+  updateSeedButtonVisibility();
+  if(!isOwnerLoggedIn){
+    openLoginModal();
+  } else {
+    closeLoginModal();
+    document.getElementById("overlay").classList.remove("show");
+  }
+  renderGrid();
+});
+
+function renderTabs(){
+  const categories = ["Tümü", ...Array.from(new Set(products.map(p=>p.cat)))];
+  const tabsEl = document.getElementById("tabs");
+  tabsEl.innerHTML = "";
+  categories.forEach(cat=>{
+    const btn = document.createElement("button");
+    btn.className = "tab" + (cat===currentCat ? " active" : "");
+    btn.textContent = cat;
+    btn.onclick = () => { currentCat = cat; renderTabs(); renderGrid(); };
+    tabsEl.appendChild(btn);
+  });
+  const catList = document.getElementById("catList");
+  catList.innerHTML = "";
+  Array.from(new Set(products.map(p=>p.cat))).forEach(cat=>{
+    const opt = document.createElement("option");
+    opt.value = cat;
+    catList.appendChild(opt);
+  });
+}
+
+function addRibbon(frame){
+  const ribbon = document.createElement("div");
+  ribbon.className = "out-ribbon";
+  ribbon.textContent = "STOKTA YOK";
+  frame.appendChild(ribbon);
+}
+
+let toastTimer = null;
+function showToast(text){
+  const toast = document.getElementById("toast");
+  toast.textContent = text;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+}
+
+function renderGrid(){
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  if(!isOwnerLoggedIn){
+    grid.innerHTML = '<div class="empty-state">Devam etmek için giriş yapın.</div>';
+    return;
+  }
+
+  if(products.length === 0){
+    grid.innerHTML = '<div class="empty-state">Henüz ürün eklenmedi.<br>Başlamak için "Yeni Ürün Ekle" veya "Örnek Ürünleri Yükle" butonuna dokunun.</div>';
+    return;
+  }
+
+  const q = searchQuery.trim().toLocaleLowerCase('tr');
+  const list = products.filter(p => {
+    const matchesCat = currentCat === "Tümü" || p.cat === currentCat;
+    const matchesSearch = !q ||
+      (p.name||"").toLocaleLowerCase('tr').includes(q) ||
+      (p.nameAr||"").includes(searchQuery.trim()) ||
+      (p.cat||"").toLocaleLowerCase('tr').includes(q) ||
+      (p.barcode||"").includes(q);
+    return matchesCat && matchesSearch;
+  });
+
+  if(list.length === 0){
+    grid.innerHTML = '<div class="no-results">"' + searchQuery + '" için ürün bulunamadı.</div>';
+    return;
+  }
+
+  list.forEach(p=>{
+    const card = document.createElement("div");
+    card.className = "tag" + (!p.stock ? " out" : "");
+
+    const badge = document.createElement("div");
+    badge.className = "stock-badge " + (p.stock ? "in" : "out");
+    badge.textContent = p.stock ? "STOKTA" : "STOKTA YOK";
+    card.appendChild(badge);
+
+    const frame = document.createElement("div");
+    frame.className = "photo-frame";
+    if(p.photoURL){
+      const img = document.createElement("img");
+      img.src = p.photoURL;
+      img.alt = p.name;
+      img.onerror = () => { frame.innerHTML = ""; const fb=document.createElement("div"); fb.className="photo-fallback"; fb.textContent="🛒"; frame.appendChild(fb); if(!p.stock) addRibbon(frame); };
+      frame.appendChild(img);
+    } else {
+      const fb = document.createElement("div");
+      fb.className = "photo-fallback";
+      fb.textContent = "🛒";
+      frame.appendChild(fb);
+    }
+    if(!p.stock) addRibbon(frame);
+    card.appendChild(frame);
+
+    const catEl = document.createElement("div");
+    catEl.className = "tag-cat";
+    catEl.textContent = p.cat;
+    card.appendChild(catEl);
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "tag-name";
+    nameEl.textContent = p.name;
+    card.appendChild(nameEl);
+
+    if(p.nameAr){
+      const nameArEl = document.createElement("div");
+      nameArEl.className = "tag-name-ar";
+      nameArEl.textContent = p.nameAr;
+      card.appendChild(nameArEl);
+    }
+
+    const priceEl = document.createElement("div");
+    priceEl.className = "tag-price mono";
+    priceEl.textContent = "₺" + p.price;
+    card.appendChild(priceEl);
+
+    if(p.barcode){
+      const strip = document.createElement("div");
+      strip.className = "barcode-strip";
+      card.appendChild(strip);
+      const bnum = document.createElement("div");
+      bnum.className = "barcode-num mono";
+      bnum.textContent = p.barcode;
+      card.appendChild(bnum);
+    }
+
+    const row = document.createElement("div");
+    row.className = "owner-row";
+    row.innerHTML = `
+      <span class="switch-label">Stokta var</span>
+      <label class="switch"><input type="checkbox" data-toggle="${p.id}" ${p.stock ? "checked":""}><span class="slider"></span></label>
+    `;
+    card.appendChild(row);
+
+    const actions = document.createElement("div");
+    actions.className = "owner-row";
+    actions.innerHTML = `<button class="edit-link" data-edit="${p.id}">Düzenle</button><button class="delete-link" data-delete="${p.id}">Sil</button>`;
+    card.appendChild(actions);
+
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll("[data-toggle]").forEach(el=>{
+    el.onchange = () => {
+      db.collection("products").doc(el.dataset.toggle).update({ stock: el.checked })
+        .catch(err => alert("Güncellenemedi: " + err.message));
+    };
+  });
+  grid.querySelectorAll("[data-edit]").forEach(btn=>{
+    btn.onclick = () => openProductModal(btn.dataset.edit);
+  });
+  grid.querySelectorAll("[data-delete]").forEach(btn=>{
+    btn.onclick = () => {
+      if(confirm("Bu ürünü silmek istediğinize emin misiniz?")){
+        db.collection("products").doc(btn.dataset.delete).delete()
+          .catch(err => alert("Silinemedi: " + err.message));
+      }
+    };
+  });
+}
+
+document.getElementById("searchInput").addEventListener("input", (e) => { searchQuery = e.target.value; renderGrid(); });
+
+/* ---------- Owner login ---------- */
+function openLoginModal(){ document.getElementById("loginModal").classList.add("show"); document.getElementById("overlay").classList.add("show"); }
+function closeLoginModal(){ document.getElementById("loginModal").classList.remove("show"); document.getElementById("loginError").textContent = ""; }
+document.getElementById("logoutBtn").onclick = () => { auth.signOut(); };
+document.getElementById("loginSubmitBtn").onclick = () => {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const errEl = document.getElementById("loginError");
+  errEl.textContent = "";
+  if(!email || !password){ errEl.textContent = "E-posta ve şifre giriniz."; return; }
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(err => { errEl.textContent = "Giriş başarısız: " + err.message; });
+};
+
+/* ---------- Seed sample data ---------- */
+function updateSeedButtonVisibility(){
+  document.getElementById("seedBtn").style.display = (isOwnerLoggedIn && products.length === 0) ? "inline-block" : "none";
+}
+
+const SAMPLE_PRODUCTS = [
+  { name:"Puck Krem Peynir", nameAr:"جبنة بوك", cat:"Süt & Peynir", price:145, barcode:"6221011012345", stock:true },
+  { name:"Halloumi Peyniri", nameAr:"جبنة حلوم", cat:"Süt & Peynir", price:210, barcode:"6221011098765", stock:true },
+  { name:"Indomie Tavuklu Noodle", nameAr:"إندومي بالدجاج", cat:"Hazır Noodle", price:25, barcode:"8992388123456", stock:true },
+  { name:"Indomie Etli Noodle", nameAr:"إندومي باللحم", cat:"Hazır Noodle", price:25, barcode:"8992388654321", stock:false },
+  { name:"Red Bull Enerji İçeceği", nameAr:"ريد بُل", cat:"İçecekler", price:75, barcode:"9002490100070", stock:true },
+  { name:"Vimto Gazlı İçecek", nameAr:"فيمتو", cat:"İçecekler", price:60, barcode:"5000208126547", stock:true },
+  { name:"Medjool Hurma 500g", nameAr:"تمر مجهول", cat:"Kuruyemiş & Bakliyat", price:180, barcode:"6291234567890", stock:true },
+  { name:"Tahin Ezmesi", nameAr:"طحينة", cat:"Kuruyemiş & Bakliyat", price:95, barcode:"6224001234567", stock:true },
+  { name:"Zaatar Baharat Karışımı", nameAr:"زعتر", cat:"Baharat", price:65, barcode:"6224009876543", stock:true },
+  { name:"Kakuleli Arap Kahvesi", nameAr:"قهوة عربية بالهيل", cat:"Baharat", price:120, barcode:"6224005556677", stock:true },
+];
+
+document.getElementById("seedBtn").onclick = async () => {
+  if(!confirm("10 örnek ürün eklenecek (fotoğrafsız). Devam edilsin mi?")) return;
+  const btn = document.getElementById("seedBtn");
+  btn.disabled = true;
+  btn.textContent = "Ekleniyor...";
+  try{
+    const batch = db.batch();
+    SAMPLE_PRODUCTS.forEach(p => {
+      const ref = db.collection("products").doc();
+      batch.set(ref, { ...p, photoURL: null, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    });
+    await batch.commit();
+    showToast("10 örnek ürün eklendi ✓");
+  } catch(err){
+    alert("Eklenemedi: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Örnek Ürünleri Yükle (10 ürün)";
+  }
+};
+
+/* ---------- Add / edit product modal ---------- */
+document.getElementById("addProductBtn").onclick = () => openProductModal(null);
+function openProductModal(productId){
+  editingProductId = productId;
+  pickedPhotoFile = null;
+  const p = productId ? products.find(x => x.id === productId) : null;
+  document.getElementById("productModalTitle").textContent = productId ? "Ürünü Düzenle" : "Yeni Ürün Ekle";
+  document.getElementById("pName").value = p ? p.name : "";
+  document.getElementById("pNameAr").value = p ? (p.nameAr||"") : "";
+  document.getElementById("pCat").value = p ? p.cat : "";
+  document.getElementById("pPrice").value = p ? p.price : "";
+  document.getElementById("pBarcode").value = p ? (p.barcode||"") : "";
+  document.getElementById("pStock").checked = p ? !!p.stock : true;
+  document.getElementById("pStockLabel").textContent = (p ? !!p.stock : true) ? "Stokta var" : "Stokta yok";
+  document.getElementById("photoPreview").style.display = p && p.photoURL ? "block" : "none";
+  document.getElementById("photoPreview").src = p && p.photoURL ? p.photoURL : "";
+  document.getElementById("photoPickerText").textContent = "📷 Fotoğraf çekmek veya seçmek için dokunun";
+  document.getElementById("productError").textContent = "";
+  document.getElementById("productModal").classList.add("show");
+  document.getElementById("overlay").classList.add("show");
+}
+function closeProductModal(){ document.getElementById("productModal").classList.remove("show"); }
+document.getElementById("productModalClose").onclick = () => { closeProductModal(); document.getElementById("overlay").classList.remove("show"); };
+document.getElementById("productCancelBtn").onclick = () => { closeProductModal(); document.getElementById("overlay").classList.remove("show"); };
+
+document.getElementById("pStock").onchange = (e) => {
+  document.getElementById("pStockLabel").textContent = e.target.checked ? "Stokta var" : "Stokta yok";
+};
+
+document.getElementById("photoPicker").onclick = () => document.getElementById("photoInput").click();
+document.getElementById("photoInput").onchange = (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  pickedPhotoFile = file;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    document.getElementById("photoPreview").src = ev.target.result;
+    document.getElementById("photoPreview").style.display = "block";
+    document.getElementById("photoPickerText").textContent = "📷 Fotoğrafı değiştirmek için tekrar dokunun";
+  };
+  reader.readAsDataURL(file);
+};
+
+document.getElementById("productSaveBtn").onclick = async () => {
+  const errEl = document.getElementById("productError");
+  errEl.textContent = "";
+  const name = document.getElementById("pName").value.trim();
+  const nameAr = document.getElementById("pNameAr").value.trim();
+  const cat = document.getElementById("pCat").value.trim();
+  const price = parseFloat(document.getElementById("pPrice").value);
+  const barcode = document.getElementById("pBarcode").value.trim();
+  const stock = document.getElementById("pStock").checked;
+
+  if(!name || !cat || isNaN(price) || price < 0){
+    errEl.textContent = "Ürün adı, kategori ve geçerli bir fiyat giriniz.";
+    return;
+  }
+
+  const saveBtn = document.getElementById("productSaveBtn");
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Kaydediliyor...";
+
+  try{
+    let photoURL = null;
+    const existing = editingProductId ? products.find(x => x.id === editingProductId) : null;
+    if(existing) photoURL = existing.photoURL || null;
+
+    if(pickedPhotoFile){
+      const ref = storage.ref().child("products/" + Date.now() + "_" + pickedPhotoFile.name);
+      const snap = await ref.put(pickedPhotoFile);
+      photoURL = await snap.ref.getDownloadURL();
+    }
+
+    const data = { name, nameAr, cat, price, barcode, stock, photoURL };
+
+    if(editingProductId){
+      await db.collection("products").doc(editingProductId).update(data);
+      showToast("Ürün güncellendi ✓");
+    } else {
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection("products").add(data);
+      showToast("Ürün eklendi ✓");
+    }
+    closeProductModal();
+    document.getElementById("overlay").classList.remove("show");
+  } catch(err){
+    errEl.textContent = "Kaydedilemedi: " + err.message;
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Kaydet";
+  }
+};
+</script>
+
+</body>
+</html>
